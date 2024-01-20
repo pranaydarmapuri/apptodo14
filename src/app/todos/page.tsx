@@ -1,4 +1,4 @@
-// Import necessary modules
+
 "use client";
 import { SessionProvider } from 'next-auth/react';
 import { useSession } from 'next-auth/react';
