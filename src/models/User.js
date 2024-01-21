@@ -11,7 +11,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // Add any additional fields relevant to your user model
+  
 });
 
 const User = mongoose.model('users', UserSchema);
