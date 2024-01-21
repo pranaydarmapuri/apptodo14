@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-
+import bcrypt from 'bcrypt';
+import User from '@/models/user';
 
 export async function connect() {
   try {
@@ -18,7 +19,6 @@ export async function connect() {
   }
 }
 
-//We are adding this function to generate JWT token
 export function generateToken(payload: any) {
   const jwtSecret = process.env.JWT_SECRET;
 
@@ -28,4 +28,22 @@ export function generateToken(payload: any) {
 
   const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
   return token;
+}
+
+export async function saveUser(username: string, password: string) {
+  try {
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const user = new User({
+      username,
+      passwordHash,
+    });
+
+    await user.save();
+    console.log('User saved successfully');
+  } catch (error) {
+    console.error('Failed to save user', error);
+    throw error;
+  }
 }

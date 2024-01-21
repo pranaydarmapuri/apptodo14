@@ -1,42 +1,77 @@
-"use client"
+'use client'
+
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function SignIn() {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleSignIn() {
     try {
-      const response = await axios.post<{ token: string }>('/api/auth/login', {
+      // Set loading to true to show a loading indicator
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.post<{ token: string }>('/api/auth/signupRoute', {
         username,
         password,
       });
 
-      
       localStorage.setItem('token', response.data.token);
 
-      
+      // Redirect to '/todos' after successful sign-in
       router.push('/todos');
     } catch (error: AxiosError | any) {
-      console.error('Error signing in', error.response?.data || error.message);
+      // Set error message to display to the user
+      setError(error.response?.data?.message || error.message);
+    } finally {
+      // Set loading back to false regardless of success or failure
+      setLoading(false);
     }
   }
 
   return (
-    <div>
-      <h1>Sign In</h1>
-      <div>
-        <label>Username:</label>
-        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
+    <section className="text-gray-600 body-font">
+      <div className="container px-5 py-24 mx-auto flex flex-wrap items-center justify-center">
+        <div className="lg:w-2/6 md:w-1/2 bg-gray-100 rounded-lg p-8 w-full">
+          <h2 className="text-gray-900 text-lg font-medium title-font mb-5">Sign In</h2>
+          <div className="relative mb-4">
+            <label htmlFor="username" className="leading-7 text-sm text-gray-600">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          <div className="relative mb-4">
+            <label htmlFor="password" className="leading-7 text-sm text-gray-600">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <button
+            className="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg"
+            onClick={handleSignIn}
+            disabled={loading}
+          >
+            {loading ? 'Signing In...' : 'Sign In'}
+          </button>
+        </div>
       </div>
-      <div>
-        <label>Password:</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </div>
-      <button onClick={handleSignIn}>Sign In</button>
-    </div>
+    </section>
   );
 }
