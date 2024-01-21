@@ -1,13 +1,14 @@
+"use client"
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/router';
 
-export default function Login() {
+export default function SignIn() {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const router = useRouter();
 
-  async function handleLogin() {
+  async function handleSignIn() {
     try {
       const response = await axios.post<{ token: string }>('/api/auth/login', {
         username,
@@ -20,13 +21,13 @@ export default function Login() {
       
       router.push('/todos');
     } catch (error: AxiosError | any) {
-      console.error('Error logging in', error.response?.data || error.message);
+      console.error('Error signing in', error.response?.data || error.message);
     }
   }
 
   return (
     <div>
-      <h1>Login</h1>
+      <h1>Sign In</h1>
       <div>
         <label>Username:</label>
         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
@@ -35,7 +36,7 @@ export default function Login() {
         <label>Password:</label>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleSignIn}>Sign In</button>
     </div>
   );
 }
