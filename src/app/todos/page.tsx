@@ -1,10 +1,7 @@
-
-"use client";
-import { SessionProvider } from 'next-auth/react';
-import { useSession } from 'next-auth/react';
+"use client"
 import { useEffect, useState } from 'react';
-
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';  // Import AxiosError for proper type checking
+import useAuth from '../../../useAuth';
 
 interface Todo {
   id: string;
@@ -13,41 +10,48 @@ interface Todo {
 }
 
 export default function Todos() {
-  const { data: session, status } = useSession();
   const [inputText, setInputText] = useState<string>('');
   const [todos, setTodos] = useState<Todo[]>([]);
   const [editMode, setEditMode] = useState<boolean>(false);
   const [editedTodo, setEditedTodo] = useState<Todo>({ id: '', desc: '', completed: false });
 
+  const { isAuthenticated, jwtToken, login } = useAuth();
+
   useEffect(() => {
     const fetchData = async () => {
-      if (session) {
+      if (isAuthenticated && jwtToken) {
         try {
           const response = await axios.get<{ todos: Todo[] }>('/api/todos', {
             headers: {
-              Authorization: 'Bearer ${session?.access?.token}',
+              Authorization: `Bearer ${jwtToken}`,
             },
           });
           setTodos(response.data.todos);
-        } catch (error) {
-          console.error('Error fetching todos', error);
+        } catch (error: AxiosError | any) {
+          console.error('Error fetching todos', error.response?.data || error.message);
         }
       }
     };
 
     fetchData();
-  }, [session]);
+  }, [isAuthenticated, jwtToken]);
 
   async function addTodo() {
-    const data = {
-      desc: inputText,
-    };
-
-    const resp = await axios.post<{ todos: Todo[] }>('/api/todos', data);
-    console.log(resp);
-    setTodos(resp.data.todos);
-    setInputText('');
+    try {
+      const data = {
+        desc: inputText,
+      };
+  
+      const resp = await axios.post<{ todos: Todo[] }>('/api/todos', data);
+      console.log(resp);
+      setTodos(resp.data.todos);
+      setInputText('');
+    } catch (error) {
+      console.error('Error adding todo', error);
+      // Handle the error (e.g., display an error message to the user)
+    }
   }
+  
 
   async function clearTodos() {
     const resp = await axios.delete<{ todos: Todo[] }>('/api/todos');
@@ -100,72 +104,68 @@ export default function Todos() {
   }
 
   return (
-    <SessionProvider session={session}>
-      <div className="flex flex-col items-center gap-8 pt-8 bg-violet-200 pb-32">
-        <div className="text-2xl">Todo List</div>
-        <div className="flex gap-2">
-          <input
-            className="text-xl rounded-md shadow-md"
-            type="text"
-            placeholder="Enter Todo"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-          />
-          <button
-            onClick={addTodo}
-            className="text-xl shadow-md bg-blue-600 text-white hover:bg-blue-500 rounded-md px-3 py-1"
-          >
-            Add
-          </button>
-          <button
-            onClick={clearTodos}
-            className="text-xl shadow-md bg-blue-600 text-white hover:bg-blue-500 rounded-md px-3 py-1"
-          >
-            Clear
-          </button>
-          </div>
-        <div className="w-5/6 flex flex-col gap-2">
-          {todos.map((todo, index) => (
-            <div key={index} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
-              <div className="flex gap-2">
-                <input
-                  type="checkbox"
-                  checked={todo.completed}
-                  onChange={() => {
-                    // Handle checkbox change if needed
-                  }}
-                />
-                <div className="text-lg text-white">{todo.desc}</div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setEditMode(true);
-                    setEditedTodo({ ...todo });
-                  }}
-                  className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`);
-                      console.log(resp);
-                      setTodos(resp.data.todos);
-                    } catch (error) {
-                      console.error('Error deleting todo', error);
-                    }
-                  }}
-                  className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
-                >
-                  Delete
-                </button>
-              </div>
-              </div>
-          ))}
-        </div>
+    <div className="flex flex-col items-center gap-8 pt-8 bg-violet-200 pb-32">
+      <div className="text-2xl">Todo List</div>
+      <div className="flex gap-2">
+        <input
+          className="text-xl rounded-md shadow-md"
+          type="text"
+          placeholder="Enter Todo"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+        />
+        <button
+          onClick={addTodo}
+          className="text-xl shadow-md bg-blue-600 text-white hover:bg-blue-500 rounded-md px-3 py-1"
+        >
+          Add
+        </button>
+        <button
+          onClick={clearTodos}
+          className="text-xl shadow-md bg-blue-600 text-white hover:bg-blue-500 rounded-md px-3 py-1"
+        >
+          Clear
+        </button>
       </div>
-    </SessionProvider>
+      <div className="w-5/6 flex flex-col gap-2">
+        {todos.map((todo, index) => (
+          <div key={index} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
+            <div className="flex gap-2">
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => {}}
+              />
+              <div className="text-lg text-white">{todo.desc}</div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setEditMode(true);
+                  setEditedTodo({ ...todo });
+                }}
+                className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
+              >
+                Edit
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`);
+                    console.log(resp);
+                    setTodos(resp.data.todos);
+                  } catch (error) {
+                    console.error('Error deleting todo', error);
+                  }
+                }}
+                className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

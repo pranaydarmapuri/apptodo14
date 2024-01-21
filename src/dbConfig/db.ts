@@ -18,7 +18,7 @@ export async function connect() {
   }
 }
 
-// Add this function to generate JWT token
+//We are adding this function to generate JWT token
 export function generateToken(payload: any) {
   const jwtSecret = process.env.JWT_SECRET;
 
