@@ -26,7 +26,7 @@ export default function Login() {
 
   return (
     <section className="text-gray-600 body-font">
-      <div className="container px-5 py-24 mx-auto flex flex-wrap items-center justify-center"> {/* Center the items */}
+      <div className="container px-5 py-24 mx-auto flex flex-wrap items-center justify-center"> 
         <div className="lg:w-2/6 md:w-1/2 bg-gray-100 rounded-lg p-8 w-full">
           <h2 className="text-gray-900 text-lg font-medium title-font mb-5">Login</h2>
           <div className="relative mb-4">
