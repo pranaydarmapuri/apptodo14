@@ -13,7 +13,7 @@ export default function SignIn() {
 
   async function handleSignIn() {
     try {
-      // Set loading to true to show a loading indicator
+      //We are setting loading to true to show a loading indicator
       setLoading(true);
       setError(null);
 
@@ -27,10 +27,10 @@ export default function SignIn() {
       // Redirect to '/todos' after successful sign-in
       router.push('/todos');
     } catch (error: AxiosError | any) {
-      // Set error message to display to the user
+      
       setError(error.response?.data?.message || error.message);
     } finally {
-      // Set loading back to false regardless of success or failure
+      
       setLoading(false);
     }
   }

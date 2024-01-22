@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react';
-import axios, { AxiosError } from 'axios';  // Import AxiosError for proper type checking
+import axios from 'axios';  // Import AxiosError for proper type checking
 import useAuth from '../../../useAuth';
 
 interface Todo {
@@ -27,7 +27,7 @@ export default function Todos() {
             },
           });
           setTodos(response.data.todos);
-        } catch (error: AxiosError | any) {
+        } catch (error: any) {
           console.error('Error fetching todos', error.response?.data || error.message);
         }
       }
@@ -48,10 +48,14 @@ export default function Todos() {
       setInputText('');
     } catch (error) {
       console.error('Error adding todo', error);
+      console.error('Response status:');
+      console.error('Response data:');
+  
       // Handle the error (e.g., display an error message to the user)
+      alert('Error adding todo. Please try again.'); // You can customize this message
     }
   }
-  
+    
 
   async function clearTodos() {
     const resp = await axios.delete<{ todos: Todo[] }>('/api/todos');
@@ -128,12 +132,13 @@ export default function Todos() {
         </button>
       </div>
       <div className="w-5/6 flex flex-col gap-2">
-        {todos.map((todo, index) => (
-          <div key={index} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
-            <div className="flex gap-2">
+      {todos && todos.map((todo, index) => (
+      <div key={index} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
+        <div className="flex gap-2">
               <input
                 type="checkbox"
                 checked={todo.completed}
+                // Add your logic for handling checkbox change if needed
                 onChange={() => {}}
               />
               <div className="text-lg text-white">{todo.desc}</div>

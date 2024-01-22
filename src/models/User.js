@@ -1,4 +1,3 @@
-// src/models/user.js
 import mongoose from 'mongoose';
 
 const UserSchema = new mongoose.Schema({
@@ -11,9 +10,8 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  
 });
 
-const User = mongoose.model('users', UserSchema);
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 export default User;
