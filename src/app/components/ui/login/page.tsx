@@ -1,7 +1,7 @@
 "use client"
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { useRouter } from 'next/navigation'; // Import from next/router instead of next/navigation
+import { useRouter } from 'next/navigation'; 
 
 export default function Login() {
   const [username, setUsername] = useState<string>('');
