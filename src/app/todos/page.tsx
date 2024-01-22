@@ -1,6 +1,6 @@
-"use client"
+'use client'
 import { useEffect, useState } from 'react';
-import axios from 'axios';  // Import AxiosError for proper type checking
+import axios, { AxiosError } from 'axios';
 import useAuth from '../../../useAuth';
 
 interface Todo {
@@ -41,37 +41,49 @@ export default function Todos() {
       const data = {
         desc: inputText,
       };
-  
-      const resp = await axios.post<{ todos: Todo[] }>('/api/todos', data);
+
+      const resp = await axios.post<{ todos: Todo[] }>('/api/todos', data, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+
       console.log(resp);
       setTodos(resp.data.todos);
       setInputText('');
-    } catch (error) {
-      console.error('Error adding todo', error);
-      console.error('Response status:');
-      console.error('Response data:');
-  
-      // Handle the error (e.g., display an error message to the user)
-      alert('Error adding todo. Please try again.'); // You can customize this message
+    } catch (error: any) {
+      console.error('Error adding todo', error.response?.data || error.message);
+      alert('Error adding todo. Please try again.');
     }
   }
-    
 
   async function clearTodos() {
-    const resp = await axios.delete<{ todos: Todo[] }>('/api/todos');
-    console.log(resp.data);
-    setTodos([]);
+    try {
+      const resp = await axios.delete<{ todos: Todo[] }>('/api/todos', {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+      console.log(resp.data);
+      setTodos([]);
+    } catch (error: any) {
+      console.error('Error deleting todos', error.response?.data || error.message);
+    }
   }
 
   async function editTodo() {
     try {
-      const resp = await axios.put<{ todos: Todo[] }>(`/api/todos/${editedTodo.id}`, editedTodo);
+      const resp = await axios.put<{ todos: Todo[] }>(`/api/todos/${editedTodo.id}`, editedTodo, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
       console.log(resp);
       setTodos(resp.data.todos);
       setEditMode(false);
       setEditedTodo({ id: '', desc: '', completed: false });
-    } catch (error) {
-      console.error('Error editing todo', error);
+    } catch (error: any) {
+      console.error('Error editing todo', error.response?.data || error.message);
     }
   }
 
@@ -132,13 +144,12 @@ export default function Todos() {
         </button>
       </div>
       <div className="w-5/6 flex flex-col gap-2">
-      {todos && todos.map((todo, index) => (
-      <div key={index} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
-        <div className="flex gap-2">
+        {todos && todos.map((todo, index) => (
+          <div key={index} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
+            <div className="flex gap-2">
               <input
                 type="checkbox"
                 checked={todo.completed}
-                // Add your logic for handling checkbox change if needed
                 onChange={() => {}}
               />
               <div className="text-lg text-white">{todo.desc}</div>
@@ -156,11 +167,15 @@ export default function Todos() {
               <button
                 onClick={async () => {
                   try {
-                    const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`);
+                    const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
+                      headers: {
+                        Authorization: `Bearer ${jwtToken}`,
+                      },
+                    });
                     console.log(resp);
                     setTodos(resp.data.todos);
-                  } catch (error) {
-                    console.error('Error deleting todo', error);
+                  } catch (error: any) {
+                    console.error('Error deleting todo', error.response?.data || error.message);
                   }
                 }}
                 className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
