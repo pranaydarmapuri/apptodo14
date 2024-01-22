@@ -1,7 +1,8 @@
-import { generateToken } from "@/dbConfig/db";
-import User from "@/models/user";
-import { NextRequest, NextResponse } from "next/server";
+// loginRoute.ts
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
+import { generateToken } from '@/dbConfig/db';
+import User from '@/models/user';
 
 export async function POST(request: NextRequest) {
   try {

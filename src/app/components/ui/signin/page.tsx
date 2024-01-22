@@ -1,8 +1,7 @@
-'use client'
-
+"use client"
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // Import from next/router instead of next/navigation
 
 export default function SignIn() {
   const [username, setUsername] = useState<string>('');
@@ -13,7 +12,6 @@ export default function SignIn() {
 
   async function handleSignIn() {
     try {
-      //We are setting loading to true to show a loading indicator
       setLoading(true);
       setError(null);
 
@@ -23,14 +21,10 @@ export default function SignIn() {
       });
 
       localStorage.setItem('token', response.data.token);
-
-      // Redirect to '/todos' after successful sign-in
       router.push('/todos');
     } catch (error: AxiosError | any) {
-      
-      setError(error.response?.data?.message || error.message);
+      setError(error.response?.data?.error || error.message);
     } finally {
-      
       setLoading(false);
     }
   }
@@ -39,7 +33,7 @@ export default function SignIn() {
     <section className="text-gray-600 body-font">
       <div className="container px-5 py-24 mx-auto flex flex-wrap items-center justify-center">
         <div className="lg:w-2/6 md:w-1/2 bg-gray-100 rounded-lg p-8 w-full">
-          <h2 className="text-gray-900 text-lg font-medium title-font mb-5">Sign In</h2>
+          <h2 className="text-gray-900 text-lg font-medium title-font mb-5">Sign Up</h2>
           <div className="relative mb-4">
             <label htmlFor="username" className="leading-7 text-sm text-gray-600">Username</label>
             <input
@@ -68,7 +62,7 @@ export default function SignIn() {
             onClick={handleSignIn}
             disabled={loading}
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? 'Signing Up...' : 'Sign Up'}
           </button>
         </div>
       </div>
