@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const { username, password } = reqBody;
 
     // Check if the username already exists
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username }).maxTimeMS(30000);
     if (existingUser) {
       return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
     }
