@@ -1,8 +1,10 @@
 // signupRoute.ts
 import { NextRequest, NextResponse } from 'next/server';
-
-import { saveUser } from '@/dbConfig/db';
+import bcrypt from 'bcrypt'
+import { connect, saveUser } from '@/dbConfig/db';
 import User from '@/models/user';
+
+connect()
 
 export async function POST(request: NextRequest) {
   try {
