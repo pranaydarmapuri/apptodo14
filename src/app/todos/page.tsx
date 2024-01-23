@@ -41,14 +41,17 @@ export default function Todos() {
       const data = {
         desc: inputText,
       };
-
+  
+      console.log('Adding todo:', data); 
+  
       const resp = await axios.post<{ todos: Todo[] }>('/api/todos', data, {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
         },
       });
-
-      console.log(resp);
+  
+      console.log('Todo added response:', resp.data); 
+  
       setTodos(resp.data.todos);
       setInputText('');
     } catch (error: any) {
@@ -56,6 +59,7 @@ export default function Todos() {
       alert('Error adding todo. Please try again.');
     }
   }
+  
 
   async function clearTodos() {
     try {

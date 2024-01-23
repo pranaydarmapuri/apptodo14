@@ -1,7 +1,8 @@
-import mongoose from 'mongoose';
+
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import User from '@/models/user';
+import mongoose from 'mongoose';
 
 export async function connect() {
   try {

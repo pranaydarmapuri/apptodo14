@@ -1,6 +1,6 @@
 // signupRoute.ts
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
+
 import { saveUser } from '@/dbConfig/db';
 import User from '@/models/user';
 
@@ -15,9 +15,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
     }
 
-    // Save the new user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await saveUser(username, hashedPassword);
+    // Save the new user without hashing the password again
+    await saveUser(username, password);
 
     return NextResponse.json({ msg: 'Signup successful' });
   } catch (error) {
