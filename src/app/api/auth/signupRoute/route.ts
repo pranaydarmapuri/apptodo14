@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
     }
 
-    // Save the new user without hashing the password again
+    // No need to hash it again so i am not hashing
     await saveUser(username, password);
 
     return NextResponse.json({ msg: 'Signup successful' });
