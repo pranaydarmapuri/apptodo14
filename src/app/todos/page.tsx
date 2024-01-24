@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import useAuth from '../../../useAuth';
 
 interface Todo {
@@ -15,20 +15,26 @@ export default function Todos() {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [editedTodo, setEditedTodo] = useState<Todo>({ id: '', desc: '', completed: false });
 
-  const { isAuthenticated, jwtToken, login } = useAuth();
+  const { isAuthenticated, jwtToken } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       if (isAuthenticated && jwtToken) {
         try {
+          console.log('Sending request with JWT token:', jwtToken);
+
           const response = await axios.get<{ todos: Todo[] }>('/api/todos', {
             headers: {
               Authorization: `Bearer ${jwtToken}`,
             },
           });
+
+          console.log('Response from server:', response);
+
           setTodos(response.data.todos);
         } catch (error: any) {
-          console.error('Error fetching todos', error.response?.data || error.message);
+          console.error('Error fetching todos:', error.response?.data || error.message);
+          alert('Error fetching todos. Please try again.');
         }
       }
     };
@@ -41,25 +47,29 @@ export default function Todos() {
       const data = {
         desc: inputText,
       };
-  
-      console.log('Adding todo:', data); 
-  
-      const resp = await axios.post<{ todos: Todo[] }>('/api/todos', data, {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      });
-  
-      console.log('Todo added response:', resp.data); 
-  
-      setTodos(resp.data.todos);
+
+      console.log('Adding todo:', data);
+
+      const resp = await axios.post<{ msg: string; success: boolean; savedTodo: Todo }>(
+        '/api/todos',
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+
+      console.log('Todo added response:', resp.data);
+
+      setTodos((prevTodos) => (Array.isArray(prevTodos) ? [...prevTodos, resp.data.savedTodo] : [resp.data.savedTodo]));
+
       setInputText('');
     } catch (error: any) {
       console.error('Error adding todo', error.response?.data || error.message);
       alert('Error adding todo. Please try again.');
     }
   }
-  
 
   async function clearTodos() {
     try {
@@ -77,13 +87,29 @@ export default function Todos() {
 
   async function editTodo() {
     try {
-      const resp = await axios.put<{ todos: Todo[] }>(`/api/todos/${editedTodo.id}`, editedTodo, {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      });
+      const resp = await axios.put<{ msg: string; success: boolean; updatedTodo: Todo }>(
+        `/api/todos/${editedTodo.id}`,
+        editedTodo,
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+
       console.log(resp);
-      setTodos(resp.data.todos);
+
+      // Update the state locally with the updated todo
+      setTodos((prevTodos) => {
+        const updatedIndex = prevTodos.findIndex((todo) => todo.id === editedTodo.id);
+        if (updatedIndex !== -1) {
+          const updatedTodos = [...prevTodos];
+          updatedTodos[updatedIndex] = resp.data.updatedTodo;
+          return updatedTodos;
+        }
+        return prevTodos;
+      });
+
       setEditMode(false);
       setEditedTodo({ id: '', desc: '', completed: false });
     } catch (error: any) {
@@ -148,47 +174,54 @@ export default function Todos() {
         </button>
       </div>
       <div className="w-5/6 flex flex-col gap-2">
-        {todos && todos.map((todo, index) => (
-          <div key={index} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
-            <div className="flex gap-2">
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => {}}
-              />
-              <div className="text-lg text-white">{todo.desc}</div>
+        {todos &&
+          todos.map((todo) => (
+            <div key={todo && todo.id} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
+              <div key={`${todo && todo.id}-content`} className="flex gap-2">
+                <input
+                  type="checkbox"
+                  checked={todo && todo.completed}
+                  onChange={() => {}}
+                />
+
+                <div key={`${todo && todo.id}-desc`} className="text-lg text-white">
+                  {todo && todo.desc}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  key={`${todo && todo.id}-edit`}
+                  onClick={() => {
+                    setEditMode(true);
+                    setEditedTodo({ ...todo });
+                  }}
+                  className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
+                >
+                  Edit
+                </button>
+                <button
+                  key={`${todo && todo.id}-delete`}
+                  onClick={async () => {
+                    try {
+                      const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
+                        headers: {
+                          Authorization: `Bearer ${jwtToken}`,
+                        },
+                      });
+                      console.log(resp);
+                      setTodos(resp.data.todos);
+                    } catch (error: any) {
+                      console.error('Error deleting todo', error.response?.data || error.message);
+                    }
+                  }}
+                  className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setEditMode(true);
-                  setEditedTodo({ ...todo });
-                }}
-                className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
-              >
-                Edit
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
-                      headers: {
-                        Authorization: `Bearer ${jwtToken}`,
-                      },
-                    });
-                    console.log(resp);
-                    setTodos(resp.data.todos);
-                  } catch (error: any) {
-                    console.error('Error deleting todo', error.response?.data || error.message);
-                  }
-                }}
-                className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
