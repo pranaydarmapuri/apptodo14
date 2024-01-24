@@ -99,7 +99,7 @@ export default function Todos() {
 
       console.log(resp);
 
-      // Update the state locally with the updated todo
+      // We are updating the state locally
       setTodos((prevTodos) => {
         const updatedIndex = prevTodos.findIndex((todo) => todo.id === editedTodo.id);
         if (updatedIndex !== -1) {
@@ -201,24 +201,24 @@ export default function Todos() {
                   Edit
                 </button>
                 <button
-                  key={`${todo && todo.id}-delete`}
-                  onClick={async () => {
-                    try {
-                      const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
-                        headers: {
-                          Authorization: `Bearer ${jwtToken}`,
-                        },
-                      });
-                      console.log(resp);
-                      setTodos(resp.data.todos);
-                    } catch (error: any) {
-                      console.error('Error deleting todo', error.response?.data || error.message);
-                    }
-                  }}
-                  className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
-                >
-                  Delete
-                </button>
+  key={`${todo && todo.id}-delete`}
+  onClick={async () => {
+    try {
+      const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+      console.log(resp);
+      setTodos((prevTodos) => prevTodos.filter((t) => t.id !== todo.id));
+    } catch (error: any) {
+      console.error('Error deleting todo', error.response?.data || error.message);
+    }
+  }}
+  className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
+>
+  Delete
+</button>
               </div>
             </div>
           ))}
