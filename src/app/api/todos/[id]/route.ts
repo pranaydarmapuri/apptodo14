@@ -30,9 +30,14 @@ export async function PUT(request: NextRequest) {
     const { desc, completed } = reqBody;
 
     
-    await Todo.updateOne({ id }, { desc, completed });
+    const updatedTodo = await Todo.findOneAndUpdate({ id }, { desc, completed }, { new: true });
 
-    return NextResponse.json({ msg: 'Todo updated', success: true });
+    
+    if (!updatedTodo) {
+      return NextResponse.json({ msg: 'Todo not found', success: false }, { status: 404 });
+    }
+
+    return NextResponse.json({ msg: 'Todo updated', success: true, updatedTodo });
   } catch (error) {
     return NextResponse.json({ msg: 'Issue happened' }, { status: 500 });
   }

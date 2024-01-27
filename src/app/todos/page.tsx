@@ -4,7 +4,7 @@ import axios from 'axios';
 import useAuth from '../../../useAuth';
 
 interface Todo {
-  _id: number;
+  
   id: string;
   desc: string;
   completed: boolean;
@@ -97,27 +97,37 @@ export default function Todos() {
           },
         }
       );
-
-      console.log(resp);
-
+  
+      console.log('Edit response:', resp);
+  
+      // Check if updatedTodo is present and has expected properties
+      console.log('Updated todo from response:', resp.data.updatedTodo);
+  
       // We are updating the state locally
       setTodos((prevTodos) => {
         const updatedIndex = prevTodos.findIndex((todo) => todo.id === editedTodo.id);
         if (updatedIndex !== -1) {
           const updatedTodos = [...prevTodos];
-          updatedTodos[updatedIndex] = resp.data.updatedTodo;
-          return updatedTodos;
+          
+          // Check if updatedTodo is present and has expected properties
+          if (resp.data.updatedTodo) {
+            updatedTodos[updatedIndex] = resp.data.updatedTodo;
+            console.log('Updated todos array:', updatedTodos);
+            return updatedTodos;
+          } else {
+            console.error('Updated todo is not present or has unexpected properties.');
+          }
         }
         return prevTodos;
       });
-
+  
       setEditMode(false);
       setEditedTodo({ id: '', desc: '', completed: false });
     } catch (error: any) {
       console.error('Error editing todo', error.response?.data || error.message);
     }
   }
-
+  
   if (editMode) {
     return (
       <div className="flex flex-col items-center gap-8 pt-8 bg-violet-200 pb-32">
@@ -177,7 +187,7 @@ export default function Todos() {
       <div className="w-5/6 flex flex-col gap-2">
         {todos &&
           todos.map((todo, indx) => (
-            <div key={`todo-${todo?._id ?? indx}`} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
+            <div key={`todo-${todo?.id ?? indx}`} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
               <div className="flex gap-2">
                 <input
                   type="checkbox"
