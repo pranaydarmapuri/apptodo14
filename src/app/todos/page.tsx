@@ -18,12 +18,12 @@ export default function Todos() {
 
   const { isAuthenticated, jwtToken, logout } = useAuth();
 
-  // Function to handle logout
+  
   function handleLogout() {
-    // Clear JWT token from local storage
+    
     localStorage.removeItem('token');
-    // Additional logout logic
-    logout(); // Call the logout function from useAuth
+    
+    logout(); 
   }
 
   const fetchTodos = async () => {
@@ -52,7 +52,7 @@ export default function Todos() {
       console.log('isAuthenticated:', isAuthenticated);
       console.log('jwtToken:', jwtToken);
   
-      // Check if jwtToken is missing or invalid
+      
       if (!isAuthenticated || !jwtToken) {
         console.error('User is not authenticated or JWT token is missing');
         return;
@@ -87,7 +87,7 @@ export default function Todos() {
   
   async function clearTodos() {
     try {
-      // Check if jwtToken is missing or invalid
+      
       if (!isAuthenticated || !jwtToken) {
         console.error('User is not authenticated or JWT token is missing');
         return;
@@ -107,7 +107,7 @@ export default function Todos() {
 
   async function editTodo() {
     try {
-      // Check if jwtToken is missing or invalid
+      
       if (!isAuthenticated || !jwtToken) {
         console.error('User is not authenticated or JWT token is missing');
         return;
