@@ -1,10 +1,10 @@
 'use client'
+
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import useAuth from '../../../useAuth';
 
 interface Todo {
-  
   id: string;
   desc: string;
   completed: boolean;
@@ -16,41 +16,54 @@ export default function Todos() {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [editedTodo, setEditedTodo] = useState<Todo>({ id: '', desc: '', completed: false });
 
-  const { isAuthenticated, jwtToken } = useAuth();
+  const { isAuthenticated, jwtToken, logout } = useAuth();
+
+  // Function to handle logout
+  function handleLogout() {
+    // Clear JWT token from local storage
+    localStorage.removeItem('token');
+    // Additional logout logic
+    logout(); // Call the logout function from useAuth
+  }
+
+  const fetchTodos = async () => {
+    try {
+      const response = await axios.get<{ todos: Todo[] }>('/api/todos', {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+      setTodos(response.data.todos);
+    } catch (error: any) {
+      console.error('Error fetching todos:', error.response?.data || error.message);
+      alert('Error fetching todos. Please try again.');
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (isAuthenticated && jwtToken) {
-        try {
-          console.log('Sending request with JWT token:', jwtToken);
-
-          const response = await axios.get<{ todos: Todo[] }>('/api/todos', {
-            headers: {
-              Authorization: `Bearer ${jwtToken}`,
-            },
-          });
-
-          console.log('Response from server:', response);
-
-          setTodos(response.data.todos);
-        } catch (error: any) {
-          console.error('Error fetching todos:', error.response?.data || error.message);
-          alert('Error fetching todos. Please try again.');
-        }
-      }
-    };
-
-    fetchData();
+    if (isAuthenticated && jwtToken) {
+      console.log('Fetching todos after login');
+      fetchTodos();
+    }
   }, [isAuthenticated, jwtToken]);
 
   async function addTodo() {
     try {
+      console.log('isAuthenticated:', isAuthenticated);
+      console.log('jwtToken:', jwtToken);
+  
+      // Check if jwtToken is missing or invalid
+      if (!isAuthenticated || !jwtToken) {
+        console.error('User is not authenticated or JWT token is missing');
+        return;
+      }
       const data = {
         desc: inputText,
       };
-
+  
       console.log('Adding todo:', data);
-
+      console.log('Using JWT token:', jwtToken);
+  
       const resp = await axios.post<{ msg: string; success: boolean; savedTodo: Todo }>(
         '/api/todos',
         data,
@@ -60,20 +73,26 @@ export default function Todos() {
           },
         }
       );
-
+  
       console.log('Todo added response:', resp.data);
-
+  
       setTodos((prevTodos) => (Array.isArray(prevTodos) ? [...prevTodos, resp.data.savedTodo] : [resp.data.savedTodo]));
-
+  
       setInputText('');
     } catch (error: any) {
       console.error('Error adding todo', error.response?.data || error.message);
       alert('Error adding todo. Please try again.');
     }
   }
-
+  
   async function clearTodos() {
     try {
+      // Check if jwtToken is missing or invalid
+      if (!isAuthenticated || !jwtToken) {
+        console.error('User is not authenticated or JWT token is missing');
+        return;
+      }
+
       const resp = await axios.delete<{ todos: Todo[] }>('/api/todos', {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
@@ -88,6 +107,12 @@ export default function Todos() {
 
   async function editTodo() {
     try {
+      // Check if jwtToken is missing or invalid
+      if (!isAuthenticated || !jwtToken) {
+        console.error('User is not authenticated or JWT token is missing');
+        return;
+      }
+
       const resp = await axios.put<{ msg: string; success: boolean; updatedTodo: Todo }>(
         `/api/todos/${editedTodo.id}`,
         editedTodo,
@@ -97,19 +122,17 @@ export default function Todos() {
           },
         }
       );
-  
+
       console.log('Edit response:', resp);
-  
-      // Check if updatedTodo is present and has expected properties
+
       console.log('Updated todo from response:', resp.data.updatedTodo);
-  
+
       // We are updating the state locally
       setTodos((prevTodos) => {
         const updatedIndex = prevTodos.findIndex((todo) => todo.id === editedTodo.id);
         if (updatedIndex !== -1) {
           const updatedTodos = [...prevTodos];
-          
-          // Check if updatedTodo is present and has expected properties
+
           if (resp.data.updatedTodo) {
             updatedTodos[updatedIndex] = resp.data.updatedTodo;
             console.log('Updated todos array:', updatedTodos);
@@ -120,14 +143,22 @@ export default function Todos() {
         }
         return prevTodos;
       });
-  
+
       setEditMode(false);
       setEditedTodo({ id: '', desc: '', completed: false });
     } catch (error: any) {
       console.error('Error editing todo', error.response?.data || error.message);
     }
   }
-  
+
+  function handleCheckboxChange(id: string) {
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  }
+
   if (editMode) {
     return (
       <div className="flex flex-col items-center gap-8 pt-8 bg-violet-200 pb-32">
@@ -192,10 +223,10 @@ export default function Todos() {
                 <input
                   type="checkbox"
                   checked={todo && todo.completed}
-                  onChange={() => {}}
+                  onChange={() => handleCheckboxChange(todo.id)}
                 />
 
-                <div className="text-lg text-white">
+                <div className={`text-lg text-white ${todo && todo.completed ? 'completed' : ''}`}>
                   {todo && todo.desc}
                 </div>
               </div>
@@ -211,23 +242,29 @@ export default function Todos() {
                   Edit
                 </button>
                 <button
-  onClick={async () => {
-    try {
-      const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-        },
-      });
-      console.log(resp);
-      setTodos((prevTodos) => prevTodos.filter((t) => t.id !== todo.id));
-    } catch (error: any) {
-      console.error('Error deleting todo', error.response?.data || error.message);
-    }
-  }}
-  className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
->
-  Delete
-</button>
+                  onClick={async () => {
+                    try {
+                      // Check if jwtToken is missing or invalid
+                      if (!isAuthenticated || !jwtToken) {
+                        console.error('User is not authenticated or JWT token is missing');
+                        return;
+                      }
+
+                      const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
+                        headers: {
+                          Authorization: `Bearer ${jwtToken}`,
+                        },
+                      });
+                      console.log(resp);
+                      setTodos((prevTodos) => prevTodos.filter((t) => t.id !== todo.id));
+                    } catch (error: any) {
+                      console.error('Error deleting todo', error.response?.data || error.message);
+                    }
+                  }}
+                  className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-1"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}

@@ -1,7 +1,7 @@
 "use client"
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 
 export default function SignIn() {
   const [username, setUsername] = useState<string>('');
@@ -20,7 +20,9 @@ export default function SignIn() {
         password,
       });
 
-      localStorage.setItem('token', response.data.token);
+      const token = response.data.token; // Corrected this line
+
+      localStorage.setItem('token', token);
       router.push('/todos');
     } catch (error: AxiosError | any) {
       setError(error.response?.data?.error || error.message);

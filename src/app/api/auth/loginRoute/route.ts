@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const reqBody = await request.json();
     const { username, password } = reqBody;
 
-    // Find user by username
+    
     const user = await User.findOne({ username });
 
     console.log('Provided Password:', password);
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Generate JWT token
+    
     const token = generateToken({ username: user.username, userId: user._id });
 
     return NextResponse.json({ msg: 'Login successful', token });

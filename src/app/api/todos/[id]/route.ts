@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connect } from '@/dbConfig/db';
 import Todo from '@/models/todo';
+import { verifyToken } from '../../auth/tokenUtills'; // Import the verifyToken function
 import { v4 } from 'uuid';
 
 connect();
@@ -12,6 +13,14 @@ function getIdFromPathname(s: String) {
 
 export async function GET(request: NextRequest) {
   try {
+    
+    const decoded = verifyToken(request);
+
+    
+    if (!decoded) {
+      return NextResponse.json({ msg: 'Unauthorized', success: false }, { status: 401 });
+    }
+
     const path = request.nextUrl.pathname;
     const id = getIdFromPathname(path);
     const todo = await Todo.findOne({ id });
@@ -24,15 +33,21 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    
+    const decoded = verifyToken(request);
+
+    
+    if (!decoded) {
+      return NextResponse.json({ msg: 'Unauthorized', success: false }, { status: 401 });
+    }
+
     const path = request.nextUrl.pathname;
     const id = getIdFromPathname(path);
     const reqBody = await request.json();
     const { desc, completed } = reqBody;
 
-    
     const updatedTodo = await Todo.findOneAndUpdate({ id }, { desc, completed }, { new: true });
 
-    
     if (!updatedTodo) {
       return NextResponse.json({ msg: 'Todo not found', success: false }, { status: 404 });
     }
@@ -45,6 +60,14 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    
+    const decoded = verifyToken(request);
+
+    
+    if (!decoded) {
+      return NextResponse.json({ msg: 'Unauthorized', success: false }, { status: 401 });
+    }
+
     const path = request.nextUrl.pathname;
     const id = getIdFromPathname(path);
     await Todo.deleteOne({ id });
