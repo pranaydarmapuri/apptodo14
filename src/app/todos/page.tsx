@@ -4,6 +4,7 @@ import axios from 'axios';
 import useAuth from '../../../useAuth';
 
 interface Todo {
+  _id: number;
   id: string;
   desc: string;
   completed: boolean;
@@ -175,23 +176,22 @@ export default function Todos() {
       </div>
       <div className="w-5/6 flex flex-col gap-2">
         {todos &&
-          todos.map((todo) => (
-            <div key={todo && todo.id} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
-              <div key={`${todo && todo.id}-content`} className="flex gap-2">
+          todos.map((todo, indx) => (
+            <div key={`todo-${todo?._id ?? indx}`} className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md">
+              <div className="flex gap-2">
                 <input
                   type="checkbox"
                   checked={todo && todo.completed}
                   onChange={() => {}}
                 />
 
-                <div key={`${todo && todo.id}-desc`} className="text-lg text-white">
+                <div className="text-lg text-white">
                   {todo && todo.desc}
                 </div>
               </div>
 
               <div className="flex gap-2">
                 <button
-                  key={`${todo && todo.id}-edit`}
                   onClick={() => {
                     setEditMode(true);
                     setEditedTodo({ ...todo });
@@ -201,7 +201,6 @@ export default function Todos() {
                   Edit
                 </button>
                 <button
-  key={`${todo && todo.id}-delete`}
   onClick={async () => {
     try {
       const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
