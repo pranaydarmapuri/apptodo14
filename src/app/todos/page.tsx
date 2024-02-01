@@ -19,17 +19,12 @@ export default function Todos() {
 
   const { isAuthenticated, jwtToken} = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated && jwtToken) {
-      console.log('Fetching todos after login');
-      fetchTodos();
-    }
-  }, [isAuthenticated, jwtToken]);
+  // Function to handle logout
   function handleLogout() {
     
     localStorage.removeItem('token');
-    
-    // logout(); 
+    // Additional logout logic
+    logout(); // Call the logout function from useAuth
   }
 
   const fetchTodos = async () => {
@@ -52,6 +47,10 @@ export default function Todos() {
   async function addTodo() {
     
     try {
+      console.log('isAuthenticated:', isAuthenticated);
+      console.log('jwtToken:', jwtToken);
+  
+      // Check if jwtToken is missing or invalid
       if (!isAuthenticated || !jwtToken) {
         console.error('User is not authenticated or JWT token is missing');
         return;
