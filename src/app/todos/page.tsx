@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import useAuth from '../../../useAuth';
+
+import useAuth from '@/hooks/useAuth';
 
 interface Todo {
   id: string;
@@ -16,18 +17,24 @@ export default function Todos() {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [editedTodo, setEditedTodo] = useState<Todo>({ id: '', desc: '', completed: false });
 
-  const { isAuthenticated, jwtToken, logout } = useAuth();
+  const { isAuthenticated, jwtToken} = useAuth();
 
-  // Function to handle logout
+  useEffect(() => {
+    if (isAuthenticated && jwtToken) {
+      console.log('Fetching todos after login');
+      fetchTodos();
+    }
+  }, [isAuthenticated, jwtToken]);
   function handleLogout() {
-    // Clear JWT token from local storage
+    
     localStorage.removeItem('token');
-    // Additional logout logic
-    logout(); // Call the logout function from useAuth
+    
+    // logout(); 
   }
 
   const fetchTodos = async () => {
     try {
+      console.log('Fetching todos with token:', jwtToken);
       const response = await axios.get<{ todos: Todo[] }>('/api/todos', {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
@@ -40,23 +47,16 @@ export default function Todos() {
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated && jwtToken) {
-      console.log('Fetching todos after login');
-      fetchTodos();
-    }
-  }, [isAuthenticated, jwtToken]);
+  
 
   async function addTodo() {
+    
     try {
-      console.log('isAuthenticated:', isAuthenticated);
-      console.log('jwtToken:', jwtToken);
-  
-      // Check if jwtToken is missing or invalid
       if (!isAuthenticated || !jwtToken) {
         console.error('User is not authenticated or JWT token is missing');
         return;
       }
+  
       const data = {
         desc: inputText,
       };
@@ -64,7 +64,7 @@ export default function Todos() {
       console.log('Adding todo:', data);
       console.log('Using JWT token:', jwtToken);
   
-      const resp = await axios.post<{ msg: string; success: boolean; savedTodo: Todo }>(
+      const resp = await axios.post<{ msg: string; success: boolean; savedTodo?: Todo }>(
         '/api/todos',
         data,
         {
@@ -74,11 +74,24 @@ export default function Todos() {
         }
       );
   
+      if (!resp.data.success) {
+        console.error('Error adding todo:', resp.data.msg);
+        alert(`Error adding todo: ${resp.data.msg}`);
+        return;
+      }
+  
       console.log('Todo added response:', resp.data);
   
-      setTodos((prevTodos) => (Array.isArray(prevTodos) ? [...prevTodos, resp.data.savedTodo] : [resp.data.savedTodo]));
-  
-      setInputText('');
+      if (resp.data.savedTodo) {
+        setTodos((prevTodos) => [
+          ...prevTodos,
+          ...(resp.data.savedTodo ? [resp.data.savedTodo] : []),
+        ]);
+        
+        setInputText('');
+      } else {
+        console.error('Saved todo is not present or has unexpected properties.');
+      }
     } catch (error: any) {
       console.error('Error adding todo', error.response?.data || error.message);
       alert('Error adding todo. Please try again.');
@@ -87,7 +100,7 @@ export default function Todos() {
   
   async function clearTodos() {
     try {
-      // Check if jwtToken is missing or invalid
+      
       if (!isAuthenticated || !jwtToken) {
         console.error('User is not authenticated or JWT token is missing');
         return;
@@ -107,7 +120,7 @@ export default function Todos() {
 
   async function editTodo() {
     try {
-      // Check if jwtToken is missing or invalid
+      
       if (!isAuthenticated || !jwtToken) {
         console.error('User is not authenticated or JWT token is missing');
         return;

@@ -20,7 +20,7 @@ export default function SignIn() {
         password,
       });
 
-      const token = response.data.token; // Corrected this line
+      const token = response.data.token;
 
       localStorage.setItem('token', token);
       router.push('/todos');

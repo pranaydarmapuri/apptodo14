@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     try {
       
       const decoded = verifyToken(request);
+      console.log('Decoded Token:', decoded);
   
       
       if (!decoded) {
@@ -32,6 +33,8 @@ export async function GET(request: NextRequest) {
     try {
       
       const decoded = verifyToken(request);
+      const token = request.headers.get('Authorization');
+      console.log('Raw Authorization Header:', token);
   
       
       if (!decoded) {
