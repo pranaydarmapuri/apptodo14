@@ -14,11 +14,15 @@ export default function SignIn() {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await axios.post<{ token: string }>('/api/auth/signupRoute', {
+      console.log("Username:", username);
+      console.log("Password:", password);
+      const response = await axios.post<{ token: string }>('http://localhost:3000/api/auth/signupRoute', {
         username,
         password,
-      });
+      },
+      {headers:{"Content-Type":'application/json'}});
+
+      console.log('Server Response:', response);
 
       const token = response.data.token;
 

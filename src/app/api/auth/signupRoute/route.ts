@@ -8,7 +8,9 @@ connect();
 
 export async function POST(request: NextRequest) {
   try {
+    console.log(request)
     const reqBody = await request.json();
+    
     const { username, password } = reqBody;
 
     const existingUser = await User.findOne({ username }).maxTimeMS(30000);
@@ -16,15 +18,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
     }
 
-    await saveUser(username, password);
+    const user=await saveUser(username, password);
 
-    const savedUser = await User.findOne({ username });
 
-    if (!savedUser) {
+    if (!user) {
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 
-    const token = generateToken({ username: savedUser.username, userId: savedUser._id });
+    const token = generateToken({ username: user.username, userId: user._id });
 
     return NextResponse.json({ msg: 'Signup successful', token }, { status: 200 });
   } catch (error) {

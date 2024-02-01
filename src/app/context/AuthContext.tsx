@@ -1,6 +1,7 @@
 "use client"
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { AuthData } from '@/hooks/useAuth';
+import { error } from 'console';
 
 const authData: AuthData={
   
@@ -55,9 +56,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           ]);
     
           const [signupData, loginData] = await Promise.all([
-            signupResponse.json().catch(() => ({})),
-            loginResponse.json().catch(() => ({})),
-          ]);
+            signupResponse.json(),
+            loginResponse.json(),
+          ]).catch(e => {
+            console.log(e)
+            return [{},{}]
+          });
     
           console.log('Signup Response:', signupResponse);
           console.log('Login Response:', loginResponse);

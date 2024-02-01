@@ -41,7 +41,7 @@ export async function saveUser(username: string, password: string) {
       passwordHash,
     });
 
-    await user.save();
+    return await user.save();
     console.log('User saved successfully');
   } catch (error) {
     console.error('Failed to save user', error);

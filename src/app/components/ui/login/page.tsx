@@ -13,7 +13,7 @@ export default function Login() {
       const response = await axios.post<{ token: string }>('/api/auth/loginRoute', {
         username,
         password,
-      });
+      },{headers:{"Content-Type":'application/json'}});
 
       localStorage.setItem('token', response.data.token);
       router.push('/todos');
