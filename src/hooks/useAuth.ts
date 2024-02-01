@@ -1,5 +1,3 @@
-
-import error from 'next/error';
 import { useState, useEffect } from 'react';
 
 export interface AuthData {
@@ -20,7 +18,6 @@ export default function useAuth(): AuthState {
     userId: '',
     username: '',
     jwtToken: '',
-
     logout: () => {
       localStorage.removeItem('token');
       setAuthState({
@@ -42,21 +39,15 @@ export default function useAuth(): AuthState {
             fetch('/api/auth/signupRoute'),
             fetch('/api/auth/loginRoute'),
           ]);
-    
+
           const [signupData, loginData] = await Promise.all([
-            signupResponse.json().catch((error) => {
-              console.error('Error parsing signup response:', error);
-              return null;
-            }),
-            loginResponse.json().catch((error) => {
-              console.error('Error parsing login response:', error);
-              return null;
-            }),
+            signupResponse.ok ? signupResponse.json() : null,
+            loginResponse.ok ? loginResponse.json() : null,
           ]);
-    
+
           console.log('Signup Data:', signupData);
           console.log('Login Data:', loginData);
-    
+
           if (signupData || loginData) {
             setAuthState({
               isAuthenticated: true,
@@ -73,9 +64,7 @@ export default function useAuth(): AuthState {
         console.error('Error checking authentication status:', error);
       }
     };
-    
 
-    
     checkAuthStatus();
   }, []);
 
