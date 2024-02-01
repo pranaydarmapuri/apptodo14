@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           ]);
 
           const [signupData, loginData] = await Promise.all([
-            signupResponse.json().catch(() => ({})), // Ensure an empty object if parsing fails
+            signupResponse.json().catch(() => ({})), 
             loginResponse.json().catch(() => ({})),
           ]);
 
