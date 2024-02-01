@@ -2,24 +2,19 @@
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation'; 
+import useAuth from '@/hooks/useAuth';
 
 export default function Login() {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const {isAuthenticated, userState, jwtToken, login} = useAuth();
   const router = useRouter();
 
-  async function handleLogin() {
-    try {
-      const response = await axios.post<{ token: string }>('http://localhost:3000/api/auth/loginRoute',  JSON.stringify({
-        username,
-        password,
-      }),{headers:{"Content-Type":'application/json'}});
+  const handleLogin = async (username:string, password: string) => {
 
-      localStorage.setItem('token', response.data.token);
+      await login(username, password)
+      localStorage.setItem('token', jwtToken);
       router.push('/todos');
-    } catch (error: AxiosError | any) {
-      console.error('Error logging in', error.response?.data || error.message);
-    }
   }
 
   return (
@@ -51,9 +46,9 @@ export default function Login() {
           </div>
           <button
             className="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg"
-            onClick={handleLogin}
+            onClick={() => handleLogin(username, password)}
           >
-            Login
+            Login Button
           </button>
         </div>
       </div>

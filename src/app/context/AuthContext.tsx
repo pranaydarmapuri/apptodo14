@@ -51,8 +51,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('Token from local storage:', token);
         if (token) {
           const [signupResponse, loginResponse] = await Promise.all([
-            fetch('/api/auth/signupRoute', { method: 'POST' }),  
-            fetch('/api/auth/loginRoute', { method: 'POST' }),   
+            fetch('http://localhost:3000/api/auth/signupRoute', { method: 'POST' }),  
+            fetch('http://localhost:3000/api/auth/loginRoute', { method: 'POST' }),   
           ]);
     
           const [signupData, loginData] = await Promise.all([
@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
     
-    checkAuthStatus();
+    //checkAuthStatus();
   }, []);
 
   return (

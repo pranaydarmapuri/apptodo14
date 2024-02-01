@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from "axios";
 
 import useAuth from '@/hooks/useAuth';
 
@@ -24,7 +24,7 @@ export default function Todos() {
     
     localStorage.removeItem('token');
     // Additional logout logic
-    logout(); // Call the logout function from useAuth
+    //logout(); // Call the logout function from useAuth
   }
 
   const fetchTodos = async () => {

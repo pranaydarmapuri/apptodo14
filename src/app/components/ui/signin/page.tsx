@@ -10,7 +10,7 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  async function handleSignIn() {
+  async function handleSignUp() {
     try {
       setLoading(true);
       setError(null);
@@ -65,7 +65,7 @@ export default function SignIn() {
           {error && <p className="text-red-500 mb-4">{error}</p>}
           <button
             className="text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg"
-            onClick={handleSignIn}
+            onClick={handleSignUp}
             disabled={loading}
           >
             {loading ? 'Signing Up...' : 'Sign Up'}
