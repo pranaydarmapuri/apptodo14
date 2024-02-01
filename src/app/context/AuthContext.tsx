@@ -23,7 +23,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Import other necessary dependencies and types
+
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthContextProps>({
