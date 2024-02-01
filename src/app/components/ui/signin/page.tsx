@@ -16,10 +16,10 @@ export default function SignIn() {
       setError(null);
       console.log("Username:", username);
       console.log("Password:", password);
-      const response = await axios.post<{ token: string }>('http://localhost:3000/api/auth/signupRoute', {
+      const response = await axios.post<{ token: string }>('http://localhost:3000/api/auth/signupRoute',  JSON.stringify({
         username,
         password,
-      },
+      }),
       {headers:{"Content-Type":'application/json'}});
 
       console.log('Server Response:', response);

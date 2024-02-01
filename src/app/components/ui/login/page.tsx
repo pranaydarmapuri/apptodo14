@@ -10,10 +10,10 @@ export default function Login() {
 
   async function handleLogin() {
     try {
-      const response = await axios.post<{ token: string }>('/api/auth/loginRoute', {
+      const response = await axios.post<{ token: string }>('http://localhost:3000/api/auth/loginRoute',  JSON.stringify({
         username,
         password,
-      },{headers:{"Content-Type":'application/json'}});
+      }),{headers:{"Content-Type":'application/json'}});
 
       localStorage.setItem('token', response.data.token);
       router.push('/todos');
