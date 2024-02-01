@@ -8,9 +8,9 @@ connect();
 
 export async function POST(request: NextRequest) {
   try {
-    console.log(request)
-    const reqBody = await request.json();
     
+    const reqBody = await request.json();
+    console.log('Request Body:', reqBody);
     const { username, password } = reqBody;
 
     const existingUser = await User.findOne({ username }).maxTimeMS(30000);
