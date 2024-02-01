@@ -47,17 +47,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkAuthStatus = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log('Token from local storage:', token);
         if (token) {
           const [signupResponse, loginResponse] = await Promise.all([
-            fetch('/api/auth/signupRoute'),
-            fetch('/api/auth/loginRoute'),
+            fetch('/api/auth/signupRoute', { method: 'POST' }),  
+            fetch('/api/auth/loginRoute', { method: 'POST' }),   
           ]);
-
+    
           const [signupData, loginData] = await Promise.all([
-            signupResponse.json().catch(() => ({})), 
+            signupResponse.json().catch(() => ({})),
             loginResponse.json().catch(() => ({})),
           ]);
-
+    
+          console.log('Signup Response:', signupResponse);
+          console.log('Login Response:', loginResponse);
+          console.log('Signup Data:', signupData);
+          console.log('Login Data:', loginData);
+    
           if (
             'userId' in signupData &&
             'username' in signupData &&
@@ -73,7 +79,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               username: signupData.username || loginData.username,
               jwtToken: signupData.jwtToken || loginData.jwtToken,
             }));
-            
           } else {
             console.error('Error: Unexpected response format from server');
           }
@@ -82,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Error checking authentication status:', error);
       }
     };
-
+    
     checkAuthStatus();
   }, []);
 
