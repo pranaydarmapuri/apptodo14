@@ -22,22 +22,7 @@ interface AuthState extends AuthData {
 
 export default function useAuth() {
   
-  // const [authState, setAuthState] = useState<AuthState>({
-  //   isAuthenticated: false,
-  //   userId: '',
-  //   username: '',
-  //   jwtToken: '',
-  //   logout: () => {
-  //     localStorage.removeItem('token');
-  //     setAuthState({
-  //       isAuthenticated: false,
-  //       userId: '',
-  //       username: '',
-  //       jwtToken: '',
-  //       logout: authState.logout,
-  //     });
-  //   },
-  // });
+  
 
   const [userState, setUserState] = useState<UserModel | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
