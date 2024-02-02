@@ -21,7 +21,7 @@ export default function Todos() {
   useEffect(() => {
     
     if (isAuthenticated) {
-      fetchUserTodos();
+      fetchUserTodos(jwtToken);
     }
   }, [isAuthenticated, fetchUserTodos]);
 

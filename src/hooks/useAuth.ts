@@ -50,12 +50,13 @@ export default function useAuth() {
         username,
         password,
       }), { headers: { 'Content-Type': 'application/json' } });
-  
-      console.log('Login API response:', response);
-  
+      
+      console.log('JWT Token from API:', response.data.jwtToken.token);
+      
       setIsAuthenticated(true);
   
-      localStorage.setItem('token', response.data.user.token)
+      localStorage.setItem('token', response.data.jwtToken.token);
+
   
       if (response && response.data && response.data.user && response.data.jwtToken) {
         console.log('User data:', response.data.user);
@@ -136,7 +137,7 @@ export default function useAuth() {
       setJwtToken('');
   }
 
-  const fetchUserTodos = async (token: string) => {
+  const fetchUserTodos = async (jwtToken: string) => {
     try {
       const token = jwtToken || localStorage.getItem('token');
 
@@ -153,7 +154,7 @@ export default function useAuth() {
       });
       
       console.log('User Todos:', response.data.todos);
-      setTodos(response.data.todos);
+      
     } catch (error: any) {
       console.error('Error fetching user todos:', error.response?.data || error.message);
       
@@ -170,8 +171,4 @@ export default function useAuth() {
     signUp,
     fetchUserTodos
   };
-}
-
-function setTodos(todos: Todo[]) {
-  throw new Error('Function not implemented.');
 }

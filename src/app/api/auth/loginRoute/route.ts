@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
 
     const token = generateToken({ username: user.username, userId: user._id });
 
+
     return NextResponse.json({ msg: 'Login successful', user: user, jwtToken: token }, { status: 200 });
   } catch (error) {
     console.error('Error logging in:', error);
