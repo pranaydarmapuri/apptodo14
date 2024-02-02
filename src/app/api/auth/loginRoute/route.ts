@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const user = await User.findOne({ username });
 
     console.log('Provided Password:', password);
-    console.log('User Password Hash:', user?.passwordHash);
+    console.log('User route login route:', user);
 
     if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
       console.log('Invalid credentials');
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const token = generateToken({ username: user.username, userId: user._id });
 
-    return NextResponse.json({ msg: 'Login successful', token }, { status: 200 });
+    return NextResponse.json({ msg: 'Login successful', user: user, jwtToken: token }, { status: 200 });
   } catch (error) {
     console.error('Error logging in:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
