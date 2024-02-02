@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 
-// import { User } from '../../node_modules/next-auth/index';
+import { User } from '../../node_modules/next-auth/index';
 import axios, { AxiosError } from 'axios';
-import User from '@/models/user';
 
 export interface AuthData {
   isAuthenticated: boolean;
@@ -48,8 +47,11 @@ export default function useAuth() {
    const login = async (username: string, password: string) => {
     try {
       const response = await axios.post<{
-        jwtToken: { user: any; token: string; };
-        user: any; token: string 
+        user: {
+          passwordHash: string;
+          username: string; token: string; 
+};
+        jwtToken: { token: string; }; token: string 
 }>('http://localhost:3000/api/auth/loginRoute',  JSON.stringify({
         username,
         password,
