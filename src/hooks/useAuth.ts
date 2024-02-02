@@ -14,15 +14,15 @@ export interface UserModel {
   username: string;
   passwordHash: string;
 }
- 
+
 interface AuthState extends AuthData {
   isAuthenticated: boolean;
   logout: () => void;
 }
 
 export default function useAuth() {
-  
-  
+
+
 
   const [userState, setUserState] = useState<UserModel | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -42,42 +42,44 @@ export default function useAuth() {
         username,
         password,
       }), { headers: { 'Content-Type': 'application/json' } });
-  
+
       console.log('Login API response:', response);
-  
+
       setIsAuthenticated(true);
-  
+
+      localStorage.setItem('token', response.data.jwtToken.token)
+
       if (response && response.data && response.data.jwtToken && response.data.user) {
         console.log('User data:', response.data.user);
         console.log('JWT Token from API:', response.data.jwtToken.token);
-      
+
         setUserState({
           username: response.data.user.username,
           passwordHash: response.data.user.passwordHash,
         });
-      
+
         setJwtToken(response.data.jwtToken.token);
-      
-        
+
+
         if (localStorage.getItem('token') !== response.data.jwtToken.token) {
           console.error('Token not saved in localStorage.');
         } else {
           console.log('Token saved in localStorage.');
         }
       }
-       } catch (error: AxiosError | any) {
+    } catch (error: AxiosError | any) {
       setIsAuthenticated(false);
       console.error('Error logging in', error.response?.data || error.message);
     }
   }
-  
-   const signUp = () => {
-    
+
+  const signUp = () => {
+
 
   }
 
-   const logout = () => {
-    
+  const logout = () => {
+
   }
 
 
