@@ -17,13 +17,13 @@ export default function Todos() {
   const [editMode, setEditMode] = useState<boolean>(false)
   const [editedTodo, setEditedTodo] = useState<Todo>({ id: '', desc: '', completed: false })
 
-  const { isAuthenticated, jwtToken,logout,fetchUserTodos } = useAuth()
+  const { isAuthenticated, jwtToken,logout,fetchUserTodos,userState } = useAuth()
   useEffect(() => {
     
     if (isAuthenticated) {
-      fetchUserTodos(jwtToken);
+      fetchUserTodos(userState?.userId);
     }
-  }, [isAuthenticated, fetchUserTodos]);
+  }, [isAuthenticated, fetchUserTodos,userState]);
 
   function handleLogout() {
     logout()
@@ -31,20 +31,21 @@ export default function Todos() {
     }
   
     
-  const fetchTodos = async () => {
-    try {
-      console.log('Fetching todos with token:', jwtToken)
-      const response = await axios.get<{ todos: Todo[] }>('/api/todos', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      setTodos(response.data.todos)
-    } catch (error: any) {
-      console.error('Error fetching todos:', error.response?.data || error.message)
-      alert('Error fetching todos. Please try again.')
-    }
-  }
+    const fetchTodos = async () => {
+      try {
+        console.log('Fetching todos with token:', jwtToken)
+        const response = await axios.get<{ todos: Todo[] }>(`/api/users/${userState?.userId}/todos`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        setTodos(response.data.todos);
+      } catch (error: any) {
+        console.error('Error fetching todos:', error.response?.data || error.message);
+        alert('Error fetching todos. Please try again.');
+      }
+    };
+  
 
   async function addTodo() {
     try {
@@ -140,9 +141,29 @@ export default function Todos() {
     }
   }
 
-  function handleCheckboxChange(id: string) {
-    setTodos(prevTodos => prevTodos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)))
+  async function handleCheckboxChange(id: string) {
+    try {
+      const updatedTodos = todos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      );
+  
+      
+      await axios.put<{ msg: string; success: boolean; updatedTodo: Todo }>(
+        `/api/todos/${id}`,
+        { completed: !todos.find(todo => todo.id === id)?.completed },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+  
+      setTodos(updatedTodos);
+    } catch (error: any) {
+      console.error('Error updating todo', error.response?.data || error.message);
+    }
   }
+  
 
   if (editMode) {
     return (

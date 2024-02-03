@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 
-import { User } from '../../node_modules/next-auth/index';
+
 import axios, { AxiosError } from 'axios';
+import User from '@/models/user';
+import Todo from '@/models/todo';
 
 
 
@@ -15,7 +17,18 @@ export interface AuthData {
 export interface UserModel {
   username: string;
   passwordHash: string;
+  userId?:string
 }
+interface LoginResponse {
+  user: {
+    passwordHash: string;
+    username: string;
+    token: string;
+    userId: string;
+    
+  },jwtToken: string
+}
+
 
 interface AuthState extends AuthData {
   isAuthenticated: boolean;
@@ -32,58 +45,49 @@ export default function useAuth() {
 
 
 
-  const [userState, setUserState] = useState<UserModel | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [jwtToken, setJwtToken] = useState<string>('');
+  
+    const [userState, setUserState] = useState<UserModel | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [jwtToken, setJwtToken] = useState<string>('');
 
-
-  const login = async (username: string, password: string) => {
-    try {
-      const response = await axios.post<{
-        user: {
-          passwordHash: string;
-          username: string;
-          token: string;
-        };
-        jwtToken: { token: string };
-      }>('http://localhost:3000/api/auth/loginRoute', JSON.stringify({
-        username,
-        password,
-      }), { headers: { 'Content-Type': 'application/json' } });
-      
-      console.log('JWT Token from API:', response.data.jwtToken.token);
-      
-      setIsAuthenticated(true);
-  
-      localStorage.setItem('token', response.data.jwtToken.token);
-
-  
-      if (response && response.data && response.data.user && response.data.jwtToken) {
-        console.log('User data:', response.data.user);
-        console.log('JWT Token from API:', response.data.jwtToken.token);
-  
-        setUserState({
-          username: response.data.user.username,
-          passwordHash: response.data.user.passwordHash,
-        });
-  
-        setJwtToken(response.data.jwtToken.token);
-  
-        if (localStorage.getItem('token') !== response.data.jwtToken.token) {
-          console.error('Token not saved in localStorage.');
-        } else {
-          console.log('Token saved in localStorage.');
-  
-          
-          fetchUserTodos(response.data.jwtToken.token);
+    const login = async (username: string, password: string) => {
+      try {
+        const response = await axios.post<LoginResponse>('http://localhost:3000/api/auth/loginRoute', JSON.stringify({
+          username,
+          password,
+        }), { headers: { 'Content-Type': 'application/json' } });
+    
+        console.log('JWT Token from API:', response.data.jwtToken);
+        
+        setIsAuthenticated(true);
+    
+        localStorage.setItem('token', response.data.jwtToken);
+    
+        if (response && response.data && response.data.user && response.data.jwtToken) {
+          console.log('User data:', response.data.user);
+          console.log('JWT Token from API:', response.data.jwtToken);
+    
+          setUserState({
+            username: response.data.user.username,
+            passwordHash: response.data.user.passwordHash,
+          });
+    
+          setJwtToken(response.data.jwtToken);
+    
+          if (localStorage.getItem('token') !== response.data.jwtToken) {
+            console.error('Token not saved in localStorage.');
+          } else {
+            console.log('Token saved in localStorage.');
+    
+            fetchUserTodos(response.data.user.userId);
+          }
         }
+      } catch (error: AxiosError | any) {
+        setIsAuthenticated(false);
+        console.error('Error logging in', error.response?.data || error.message);
       }
-    } catch (error: AxiosError | any) {
-      setIsAuthenticated(false);
-      console.error('Error logging in', error.response?.data || error.message);
     }
-  }
-  
+    
   const signUp = async (username: string, password: string) => {
     try {
       const response = await axios.post<{
@@ -137,30 +141,39 @@ export default function useAuth() {
       setJwtToken('');
   }
 
-  const fetchUserTodos = async (jwtToken: string) => {
-    try {
-      const token = jwtToken || localStorage.getItem('token');
-
-      if (!token) {
-        console.error('Token not found.');
-        return;
-      }
-
-      console.log('Fetching todos with token:', token);
-      const response = await axios.get<{ todos: Todo[] }>('/api/todos', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      console.log('User Todos:', response.data.todos);
-      
-    } catch (error: any) {
-      console.error('Error fetching user todos:', error.response?.data || error.message);
-      
+  const fetchUserTodos = async (userId: string | undefined) => {
+  try {
+    if (userId === undefined) {
+      console.error('userId is undefined');
+      return;
     }
-  };
 
+    const response = await axios.get<{ todos: Todo[] }>(`/api/users/${userId}/todos`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    console.log('User Todos:', response.data.todos);
+
+    const user = await User.findOne({ username: userState?.username }).exec();
+    console.log('User Object:', user);
+
+    response.data.todos.forEach(async (todo) => {
+      const newTodo = new Todo({
+        desc: todo.desc,
+        completed: todo.completed,
+      });
+      await newTodo.save();
+      user?.todos.push(newTodo._id);
+      console.log('New Todo:', newTodo);
+    });
+
+    await user?.save();
+  } catch (error: any) {
+    console.error('Error fetching user todos:', error.response?.data || error.message);
+  }
+};
 
   return {
     isAuthenticated,
@@ -170,5 +183,6 @@ export default function useAuth() {
     logout,
     signUp,
     fetchUserTodos
+    
   };
 }

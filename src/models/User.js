@@ -1,4 +1,3 @@
-
 import mongoose from 'mongoose';
 
 const UserSchema = new mongoose.Schema({
@@ -11,10 +10,12 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  jwtToken: {
-    type: String,
-    default: '', 
-  },
+  
+ 
+  todos: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Todo',
+  }],
 });
 
 const User = mongoose.models?.['User'] ?? mongoose.model('User', UserSchema);
