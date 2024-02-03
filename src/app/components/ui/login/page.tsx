@@ -17,9 +17,8 @@ export default function Login() {
     try {
       setLoading(true);
       setError(null);
-  
-      // Make login request
-      const response = await axios.post<{ jwtToken: string }>(
+
+      const response = await axios.post<{ jwtToken: string, sessionId: string }>(
         'http://localhost:3000/api/auth/loginRoute',
         JSON.stringify({
           username,
@@ -27,31 +26,22 @@ export default function Login() {
         }),
         { headers: { 'Content-Type': 'application/json' } }
       );
-  
-      console.log('Server Response:', response);
-  
-      // Call useAuth's login function
+
+      const { jwtToken, sessionId } = response.data;
+
+      localStorage.setItem('token', jwtToken);
+      localStorage.setItem('sessionId', sessionId);
+
       await login(username, password);
-  
-      const token = response.data?.jwtToken;
-      console.log('Token:', token);
-  
-      localStorage.setItem('token', token);
-  
-      // Fetch user data if needed
-      // fetchUserData(response.data.user.token);
-  
+
       router.push('/todos');
     } catch (error) {
       console.error('Login error:', error);
-  
-      // Handle error gracefully, set an error state, or display an error message
       setError('An error occurred during login.');
     } finally {
       setLoading(false);
     }
   };
-  
   return (
     <section className="text-gray-600 body-font">
       <div className="container px-5 py-24 mx-auto flex flex-wrap items-center justify-center"> 

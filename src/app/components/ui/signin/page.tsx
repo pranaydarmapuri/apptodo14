@@ -14,19 +14,21 @@ export default function SignIn() {
     try {
       setLoading(true);
       setError(null);
-      console.log("Username:", username);
-      console.log("Password:", password);
-      const response = await axios.post<{ token: string }>('http://localhost:3000/api/auth/signupRoute',  JSON.stringify({
-        username,
-        password,
-      }),
-      {headers:{"Content-Type":'application/json'}});
 
-      console.log('Server Response:', response);
+      const response = await axios.post<{ token: string, sessionId: string }>(
+        'http://localhost:3000/api/auth/signupRoute',
+        JSON.stringify({
+          username,
+          password,
+        }),
+        { headers: { "Content-Type": 'application/json' } }
+      );
 
-      const token = response.data.token;
+      const { token, sessionId } = response.data;
 
       localStorage.setItem('token', token);
+      localStorage.setItem('sessionId', sessionId);
+
       router.push('/todos');
     } catch (error: AxiosError | any) {
       setError(error.response?.data?.error || error.message);
@@ -34,7 +36,6 @@ export default function SignIn() {
       setLoading(false);
     }
   }
-
   return (
     <section className="text-gray-600 body-font">
       <div className="container px-5 py-24 mx-auto flex flex-wrap items-center justify-center">

@@ -1,13 +1,6 @@
 import mongoose from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
-
-const TodosSchema = new mongoose.Schema({
-  id: {
-    type: String,
-    default: uuidv4,
-    required: true,
-    unique: true,
-  },
+import User from './user';
+const TodoSchema = new mongoose.Schema({
   desc: {
     type: String,
     required: true,
@@ -16,8 +9,13 @@ const TodosSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 });
 
-const Todo = mongoose.models?.['Todo'] ?? mongoose.model('Todo', TodosSchema);
+const Todo = mongoose.models?.['Todo'] ?? mongoose.model('Todo', TodoSchema);
 
 export default Todo;

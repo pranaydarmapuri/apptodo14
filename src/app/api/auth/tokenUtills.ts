@@ -1,7 +1,13 @@
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-export function verifyToken(request: NextRequest) {
+const secretKey = process.env.JWT_SECRET || ''; // Use the environment variable
+
+export function generateToken(data: Record<string, any>): string {
+  return jwt.sign(data, secretKey, { expiresIn: '1h' });
+}
+
+export function verifyToken(request: NextRequest): Record<string, any> | null {
   const token = request.headers.get('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
@@ -9,9 +15,10 @@ export function verifyToken(request: NextRequest) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || '');
-    return decoded;
+    const decoded = jwt.verify(token, secretKey);
+    return decoded as Record<string, any>;
   } catch (error) {
+    console.error('JWT verification failed:', error);
     return null;
   }
 }

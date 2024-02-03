@@ -4,6 +4,17 @@ import bcrypt from 'bcrypt';
 import User from '@/models/user';
 import mongoose from 'mongoose';
 
+
+
+export function generateSessionId() {
+  
+  const uuid = require('uuid');
+
+  
+  const sessionId = uuid.v4();
+  return sessionId;
+}
+
 export async function connect() {
   try {
     const mongoURI = process.env.MONGO_URI;
@@ -36,13 +47,16 @@ export async function saveUser(username: string, password: string) {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
+    const sessionId = generateSessionId(); // Generate a session ID
+
     const user = new User({
       username,
       passwordHash,
+      sessionId,
     });
-    console.log('User saved successfully');
 
-    return await user.save();  
+    console.log('User saved successfully');
+    return await user.save();
   } catch (error) {
     console.error('Failed to save user', error);
     throw error;

@@ -7,6 +7,7 @@ import useAuth from '@/hooks/useAuth'
 
 interface Todo {
   id: string
+  _id?: string
   desc: string
   completed: boolean
 }
@@ -21,7 +22,7 @@ export default function Todos() {
   useEffect(() => {
     
     if (isAuthenticated) {
-      fetchUserTodos(userState?.userId);
+      fetchUserTodos(userState?._id);
     }
   }, [isAuthenticated, fetchUserTodos,userState]);
 
@@ -34,9 +35,10 @@ export default function Todos() {
     const fetchTodos = async () => {
       try {
         console.log('Fetching todos with token:', jwtToken)
-        const response = await axios.get<{ todos: Todo[] }>(`/api/users/${userState?.userId}/todos`, {
+        const response = await axios.get<{ todos: Todo[] }>(`/api/users/${userState?._id}/todos`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Session-ID': localStorage.getItem('sessionId')
           }
         });
         setTodos(response.data.todos);
@@ -58,7 +60,8 @@ export default function Todos() {
 
       const resp = await axios.post<{ msg: string; success: boolean; savedTodo?: Todo }>('/api/todos', data, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'X-Session-ID': localStorage.getItem('sessionId'),
         }
       })
 
@@ -89,7 +92,8 @@ export default function Todos() {
 
       const resp = await axios.delete<{ todos: Todo[] }>('/api/todos', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'X-Session-ID': localStorage.getItem('sessionId'),
         }
       })
       console.log(resp.data)
@@ -101,60 +105,60 @@ export default function Todos() {
 
   async function editTodo() {
     try {
-
-
       const resp = await axios.put<{ msg: string; success: boolean; updatedTodo: Todo }>(
         `/api/todos/${editedTodo.id}`,
-        editedTodo,
+        { desc: editedTodo.desc, completed: editedTodo.completed },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Session-ID': localStorage.getItem('sessionId'),
           }
         }
-      )
-
-      console.log('Edit response:', resp)
-
-      console.log('Updated todo from response:', resp.data.updatedTodo)
-
-      // We are updating the state locally
-      setTodos(prevTodos => {
-        const updatedIndex = prevTodos.findIndex(todo => todo.id === editedTodo.id)
-        if (updatedIndex !== -1) {
-          const updatedTodos = [...prevTodos]
-
-          if (resp.data.updatedTodo) {
-            updatedTodos[updatedIndex] = resp.data.updatedTodo
-            console.log('Updated todos array:', updatedTodos)
-            return updatedTodos
-          } else {
-            console.error('Updated todo is not present or has unexpected properties.')
-          }
-        }
-        return prevTodos
-      })
-
-      setEditMode(false)
-      setEditedTodo({ id: '', desc: '', completed: false })
-    } catch (error: any) {
-      console.error('Error editing todo', error.response?.data || error.message)
-    }
-  }
-
-  async function handleCheckboxChange(id: string) {
-    try {
-      const updatedTodos = todos.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
       );
   
-      
+      console.log('Edit response:', resp);
+  
+      if (resp.data.success && resp.data.updatedTodo) {
+        setTodos(prevTodos => {
+          const updatedIndex = prevTodos.findIndex(todo => todo._id === editedTodo.id);
+          if (updatedIndex !== -1) {
+            const updatedTodos = [...prevTodos];
+            updatedTodos[updatedIndex] = resp.data.updatedTodo;
+            return updatedTodos;
+          }
+          return prevTodos;
+        });
+  
+        setEditMode(false);
+        setEditedTodo({ id: '', desc: '', completed: false });
+      } else {
+        console.error('Error editing todo:', resp.data.msg);
+      }
+    } catch (error: any) {
+      console.error('Error editing todo', error.response?.data || error.message);
+    }
+  }
+  
+  
+  async function handleCheckboxChange(id: string | undefined) {
+    try {
+      if (!id) {
+        console.error('Invalid todo ID for checkbox change');
+        return;
+      }
+  
+      const updatedTodos = todos.map((todo) =>
+        todo._id === id ? { ...todo, completed: !todo.completed } : todo
+      );
+  
       await axios.put<{ msg: string; success: boolean; updatedTodo: Todo }>(
         `/api/todos/${id}`,
-        { completed: !todos.find(todo => todo.id === id)?.completed },
+        { completed: !todos.find((todo) => todo._id === id)?.completed },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Session-ID': localStorage.getItem('sessionId'),
+          },
         }
       );
   
@@ -236,11 +240,11 @@ export default function Todos() {
               className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md"
             >
               <div className="flex gap-2">
-                <input
-                  type="checkbox"
-                  checked={todo && todo.completed}
-                  onChange={() => handleCheckboxChange(todo.id)}
-                />
+              <input
+  type="checkbox"
+  checked={todo?.completed || false}
+  onChange={() => handleCheckboxChange(todo._id)}
+/>
 
                 <div className={`text-lg text-white ${todo && todo.completed ? 'completed' : ''}`}>
                   {todo && todo.desc}
@@ -248,15 +252,21 @@ export default function Todos() {
               </div>
 
               <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setEditMode(true)
-                    setEditedTodo({ ...todo })
-                  }}
-                  className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
-                >
-                  Edit
-                </button>
+              <button
+  onClick={() => {
+    console.log('Edit button clicked. Todo:', todo);
+    if (todo._id) {
+      setEditMode(true);
+      setEditedTodo({ ...todo, id: todo._id });
+    } else {
+      console.error('Invalid todo ID for edit');
+    }
+  }}
+  className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
+>
+  Edit
+</button>
+
                 <button
                   onClick={async () => {
                     try {
@@ -265,7 +275,8 @@ export default function Todos() {
 
                       const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
                         headers: {
-                          Authorization: `Bearer ${localStorage.getItem('token')}`
+                          Authorization: `Bearer ${localStorage.getItem('token')}`,
+                          'X-Session-ID': localStorage.getItem('sessionId'),
                         }
                       })
                       console.log(resp)

@@ -17,14 +17,14 @@ export interface AuthData {
 export interface UserModel {
   username: string;
   passwordHash: string;
-  userId?:string
+  _id?:string
 }
 interface LoginResponse {
   user: {
     passwordHash: string;
     username: string;
     token: string;
-    userId: string;
+    _id: string;
     
   },jwtToken: string
 }
@@ -79,7 +79,7 @@ export default function useAuth() {
           } else {
             console.log('Token saved in localStorage.');
     
-            fetchUserTodos(response.data.user.userId);
+            fetchUserTodos(response.data.user._id);
           }
         }
       } catch (error: AxiosError | any) {
@@ -141,39 +141,41 @@ export default function useAuth() {
       setJwtToken('');
   }
 
-  const fetchUserTodos = async (userId: string | undefined) => {
-  try {
-    if (userId === undefined) {
-      console.error('userId is undefined');
-      return;
-    }
-
-    const response = await axios.get<{ todos: Todo[] }>(`/api/users/${userId}/todos`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+  
+  const fetchUserTodos = async (sessionId: string | undefined) => {
+    try {
+      if (sessionId === undefined) {
+        console.error('sessionId is undefined');
+        return;
       }
-    });
 
-    console.log('User Todos:', response.data.todos);
-
-    const user = await User.findOne({ username: userState?.username }).exec();
-    console.log('User Object:', user);
-
-    response.data.todos.forEach(async (todo) => {
-      const newTodo = new Todo({
-        desc: todo.desc,
-        completed: todo.completed,
+      const response = await axios.get<{ todos: Todo[] }>(`/api/users/todos`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'X-Session-ID': sessionId,
+        },
       });
-      await newTodo.save();
-      user?.todos.push(newTodo._id);
-      console.log('New Todo:', newTodo);
-    });
 
-    await user?.save();
-  } catch (error: any) {
-    console.error('Error fetching user todos:', error.response?.data || error.message);
-  }
-};
+      console.log('User Todos:', response.data.todos);
+
+      
+      const user = await User.findOne({ sessionId }).exec();
+      response.data.todos.forEach(async (todo) => {
+        const newTodo = new Todo({
+          desc: todo.desc,
+          completed: todo.completed,
+          user: user?._id,
+        });
+        await newTodo.save();
+        user?.todos.push(newTodo._id);
+        console.log('New Todo:', newTodo);
+      });
+
+      await user?.save();
+    } catch (error: any) {
+      console.error('Error fetching user todos:', error.response?.data || error.message);
+    }
+  };
 
   return {
     isAuthenticated,
@@ -182,7 +184,6 @@ export default function useAuth() {
     jwtToken,
     logout,
     signUp,
-    fetchUserTodos
-    
+    fetchUserTodos,
   };
 }
