@@ -18,36 +18,37 @@ export default function Todos() {
   const [editMode, setEditMode] = useState<boolean>(false)
   const [editedTodo, setEditedTodo] = useState<Todo>({ id: '', desc: '', completed: false })
 
-  const { isAuthenticated, jwtToken,logout,fetchUserTodos,userState } = useAuth()
+  const { isAuthenticated, jwtToken, logout, fetchUserTodos, userState } = useAuth()
   useEffect(() => {
-    
+
     if (isAuthenticated) {
       fetchUserTodos(userState?._id);
     }
-  }, [isAuthenticated, fetchUserTodos,userState]);
+  }, [isAuthenticated, fetchUserTodos, userState]);
 
   function handleLogout() {
     logout()
-      
+
+  }
+
+
+  const fetchTodos = async () => {
+    try {
+      console.log('Fetching todos with token:', jwtToken)
+      const response = await axios.get<{ todos: Todo[] }>(`/api/${userState?._id}/todos`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'X-Session-ID': localStorage.getItem('sessionId')
+        }
+      });
+      console.log(response.data, response.status)
+      setTodos(response.data.todos);
+    } catch (error: any) {
+      console.error('Error fetching todos:', error.response?.data || error.message);
+      alert('Error fetching todos. Please try again.');
     }
-  
-    
-    const fetchTodos = async () => {
-      try {
-        console.log('Fetching todos with token:', jwtToken)
-        const response = await axios.get<{ todos: Todo[] }>(`/api/${userState?._id}/todos`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'X-Session-ID': localStorage.getItem('sessionId')
-          }
-        });
-        setTodos(response.data.todos);
-      } catch (error: any) {
-        console.error('Error fetching todos:', error.response?.data || error.message);
-        alert('Error fetching todos. Please try again.');
-      }
-    };
-  
+  };
+
 
   async function addTodo() {
     try {
@@ -88,7 +89,7 @@ export default function Todos() {
 
   async function clearTodos() {
     try {
-      
+
 
       const resp = await axios.delete<{ todos: Todo[] }>('/api/todos', {
         headers: {
@@ -115,9 +116,9 @@ export default function Todos() {
           }
         }
       );
-  
+
       console.log('Edit response:', resp);
-  
+
       if (resp.data.success && resp.data.updatedTodo) {
         setTodos(prevTodos => {
           const updatedIndex = prevTodos.findIndex(todo => todo._id === editedTodo.id);
@@ -128,7 +129,7 @@ export default function Todos() {
           }
           return prevTodos;
         });
-  
+
         setEditMode(false);
         setEditedTodo({ id: '', desc: '', completed: false });
       } else {
@@ -138,19 +139,19 @@ export default function Todos() {
       console.error('Error editing todo', error.response?.data || error.message);
     }
   }
-  
-  
+
+
   async function handleCheckboxChange(id: string | undefined) {
     try {
       if (!id) {
         console.error('Invalid todo ID for checkbox change');
         return;
       }
-  
+
       const updatedTodos = todos.map((todo) =>
         todo._id === id ? { ...todo, completed: !todo.completed } : todo
       );
-  
+
       await axios.put<{ msg: string; success: boolean; updatedTodo: Todo }>(
         `/api/todos/${id}`,
         { completed: !todos.find((todo) => todo._id === id)?.completed },
@@ -161,13 +162,13 @@ export default function Todos() {
           },
         }
       );
-  
+
       setTodos(updatedTodos);
     } catch (error: any) {
       console.error('Error updating todo', error.response?.data || error.message);
     }
   }
-  
+
 
   if (editMode) {
     return (
@@ -225,13 +226,13 @@ export default function Todos() {
           Clear
         </button>
         <button
-        onClick={handleLogout}
-        className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-3 py-1"
-      >
-        Logout
-      </button>
+          onClick={handleLogout}
+          className="text-xl shadow-md bg-red-600 text-white hover:bg-blue-500 rounded-md px-3 py-1"
+        >
+          Logout
+        </button>
       </div>
-      
+
       <div className="w-5/6 flex flex-col gap-2">
         {todos &&
           todos.map((todo, indx) => (
@@ -240,11 +241,11 @@ export default function Todos() {
               className="bg-violet-600 flex justify-between items-center p-2 rounded-lg shadow-md"
             >
               <div className="flex gap-2">
-              <input
-  type="checkbox"
-  checked={todo?.completed || false}
-  onChange={() => handleCheckboxChange(todo._id)}
-/>
+                <input
+                  type="checkbox"
+                  checked={todo?.completed || false}
+                  onChange={() => handleCheckboxChange(todo._id)}
+                />
 
                 <div className={`text-lg text-white ${todo && todo.completed ? 'completed' : ''}`}>
                   {todo && todo.desc}
@@ -252,26 +253,26 @@ export default function Todos() {
               </div>
 
               <div className="flex gap-2">
-              <button
-  onClick={() => {
-    console.log('Edit button clicked. Todo:', todo);
-    if (todo._id) {
-      setEditMode(true);
-      setEditedTodo({ ...todo, id: todo._id });
-    } else {
-      console.error('Invalid todo ID for edit');
-    }
-  }}
-  className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
->
-  Edit
-</button>
+                <button
+                  onClick={() => {
+                    console.log('Edit button clicked. Todo:', todo);
+                    if (todo._id) {
+                      setEditMode(true);
+                      setEditedTodo({ ...todo, id: todo._id });
+                    } else {
+                      console.error('Invalid todo ID for edit');
+                    }
+                  }}
+                  className="text-xl shadow-md bg-green-600 text-white hover:bg-blue-500 rounded-md px-1"
+                >
+                  Edit
+                </button>
 
                 <button
                   onClick={async () => {
                     try {
                       // Check if jwtToken is missing or invalid
-                      
+
 
                       const resp = await axios.delete<{ todos: Todo[] }>(`/api/todos/${todo.id}`, {
                         headers: {
@@ -289,8 +290,8 @@ export default function Todos() {
                 >
                   Delete
                 </button>
-               
-    
+
+
               </div>
             </div>
           ))}
