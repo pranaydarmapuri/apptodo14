@@ -35,7 +35,7 @@ export default function Todos() {
     const fetchTodos = async () => {
       try {
         console.log('Fetching todos with token:', jwtToken)
-        const response = await axios.get<{ todos: Todo[] }>(`/api/users/${userState?._id}/todos`, {
+        const response = await axios.get<{ todos: Todo[] }>(`/api/${userState?._id}/todos`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
             'X-Session-ID': localStorage.getItem('sessionId')
